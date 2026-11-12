@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LezTorrent</title>
+  <link rel="icon" href="/logo.svg">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="aurora" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+
+  <!-- статус-бар -->
+  <header class="status">
+    <div class="clock"><b id="time">9:41</b><span id="date"></span></div>
+
+    <button class="island" id="island" title="Добавить торрент">
+      <span class="i-dot"></span>
+      <span class="i-text" id="island-text">Добавить</span>
+      <span class="eq" id="eq"><i></i><i></i><i></i><i></i><i></i></span>
+    </button>
+
+    <div class="status-r">
+      <span class="who">LezTorrent</span>
+      <div class="wctl" id="wctl" hidden>
+        <button data-w="minimize" title="Свернуть"><svg viewBox="0 0 12 12"><path d="M2.5 6h7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>
+        <button data-w="maximize" title="Развернуть"><svg viewBox="0 0 12 12"><rect x="2.5" y="2.5" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></button>
+        <button data-w="close" class="x" title="Закрыть"><svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- фильтры — по центру окна, ровно под островом -->
+  <div class="filterbar">
+    <span></span>
+    <nav class="tabs glass" id="filters">
+      <button data-f="all" class="on">Все</button>
+      <button data-f="downloading">Качаются</button>
+      <button data-f="seeding">Раздаются</button>
+      <button data-f="paused">Пауза</button>
+    </nav>
+    <div class="fb-right">
+      <button class="allbtn glass" id="all-toggle">Пауза всё</button>
+      <span class="ly-count" id="count">00 / 00</span>
+    </div>
+  </div>
+
+  <div class="stage">
+    <!-- левая колонка виджетов -->
+    <section class="widgets" id="widgets">
+      <article class="hero" id="hero">
+        <div class="hero-top">
+          <span class="chip" id="hero-chip">Сейчас качается</span>
+        </div>
+        <h1 id="hero-name">Пока тихо</h1>
+        <div class="hero-foot">
+          <div class="line"><span id="hero-bar"></span></div>
+          <div class="hero-meta"><span id="hero-left">Кинь magnet в остров сверху</span><span id="hero-pct"></span></div>
+        </div>
+      </article>
+
+      <article class="player glass" id="player">
+        <div class="p-info">
+          <strong id="p-name">—</strong>
+          <span id="p-sub">нет активных</span>
+        </div>
+        <div class="p-acts">
+          <button class="pbtn" data-a="toggle" id="p-toggle" title="Пауза"></button>
+          <button class="pbtn" data-a="files" title="Файлы"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg></button>
+          <button class="pbtn" data-a="open" title="Открыть папку"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></button>
+          <button class="pbtn del" data-a="remove" title="Удалить"><svg viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12M9 7V4h6v3"/></svg></button>
+        </div>
+        <div class="scrub"><span id="p-bar"></span></div>
+      </article>
+
+      <article class="speedw glass">
+        <div class="sw-row">
+          <div class="sw-big"><b id="g-down">0</b><span id="g-down-u">KB/s</span></div>
+          <div class="sw-up"><b id="g-up">0</b><span id="g-up-u">KB/s</span></div>
+        </div>
+        <canvas id="spark" height="44"></canvas>
+      </article>
+    </section>
+
+    <!-- правая часть: торренты как текст песни -->
+    <section class="lyrics">
+      <ol class="ly-list" id="list"></ol>
+      <div class="ly-empty" id="empty" hidden>
+        <p class="big">Здесь будут<br>твои торренты</p>
+        
+      </div>
+    </section>
+  </div>
+
+  <button class="handle glass" id="open-settings">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    Настройки
+  </button>
+
+  <div class="notes" id="toasts"></div>
+  <div class="drop" id="drop"><div>Отпускай</div></div>
+
+  <dialog id="add">
+    <form method="dialog" id="add-form">
+      <h3>Новый торрент</h3>
+      <input id="magnet" placeholder="magnet:?xt=urn:btih:…" autocomplete="off" spellcheck="false">
+      <div class="picked" id="picked" hidden></div>
+      <label class="field wide"><span>Куда</span><input id="add-dir" spellcheck="false"></label>
+      <p class="space" id="add-space"></p>
+      <footer>
+        <label class="ghost file-btn">Файл .torrent<input type="file" id="file" accept=".torrent,application/x-bittorrent" multiple hidden></label>
+        <span class="sp"></span>
+        <button value="cancel" class="ghost" formnovalidate>Отмена</button>
+        <button value="ok" class="primary">Добавить</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog id="files" class="filesdlg">
+    <form method="dialog" id="files-form">
+      <h3 id="files-name"></h3>
+      <ul class="files" id="files-list"></ul>
+      <footer>
+        <button type="button" class="ghost" id="files-all">Все</button>
+        <button type="button" class="ghost" id="files-recheck">Перепроверить</button>
+        <span class="sp"></span>
+        <button value="cancel" class="ghost" formnovalidate>Отмена</button>
+        <button value="save" class="primary" id="files-save">Сохранить</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog id="settings" class="settings">
+    <form method="dialog" id="settings-form">
+      <h3>Настройки</h3>
+
+      <section>
+        <h4>Загрузки</h4>
+        <label class="field wide"><span>Папка</span><input name="downloadDir" spellcheck="false"></label>
+        <p class="space" id="set-space"></p>
+        <label class="field"><span>Качать одновременно</span><input name="maxActive" type="number" min="0" max="100" placeholder="все"></label>
+        <label class="field"><span>Добавлять на паузе</span><input name="startPaused" type="checkbox" class="sw"></label>
+      </section>
+
+      <section>
+        <h4>Скорость, КБ/с</h4>
+        <label class="field"><span>Приём</span><input name="downloadLimit" type="number" min="0" placeholder="∞"></label>
+        <label class="field"><span>Отдача</span><input name="uploadLimit" type="number" min="0" placeholder="∞"></label>
+      </section>
+
+      <section>
+        <h4>Раздача</h4>
+        <label class="field"><span>Остановить при рейтинге</span><input name="seedRatio" type="number" min="0" step="0.1" placeholder="∞"></label>
+        <label class="field"><span>Остановить через, ч</span><input name="seedHours" type="number" min="0" step="1" placeholder="∞"></label>
+      </section>
+
+      <section>
+        <h4>Сеть</h4>
+        <label class="field"><span>Порт</span><input name="torrentPort" type="number" min="1024" max="65535"></label>
+      </section>
+
+      <section>
+        <h4>Система</h4>
+        <label class="field"><span>Уведомления</span><input name="notify" type="checkbox" class="sw"></label>
+        <label class="field"><span>Запуск со входом</span><input name="autostart" type="checkbox" class="sw"></label>
+        <label class="field"><span>Крестик прячет в трей</span><input name="closeToTray" type="checkbox" class="sw"></label>
+        <div class="field seg-field"><span>Когда всё скачается</span>
+          <div class="seg" id="after-seg">
+            <label><input type="radio" name="afterAll" value="none"><span>Ничего</span></label>
+            <label><input type="radio" name="afterAll" value="suspend"><span>Сон</span></label>
+            <label><input type="radio" name="afterAll" value="poweroff"><span>Выключить</span></label>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <button value="cancel" class="ghost" formnovalidate>Отмена</button>
+        <button value="save" class="primary">Сохранить</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog id="confirm">
+    <form method="dialog">
+      <h3>Удалить торрент?</h3>
+      <p id="confirm-name"></p>
+      <label class="check"><input type="checkbox" id="confirm-files"> И скачанные файлы тоже</label>
+      <footer>
+        <button value="cancel" class="ghost">Отмена</button>
+        <button value="ok" class="danger">Удалить</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <script type="module" src="/app.js"></script>
+  <script type="module" src="/liquid.js"></script>
+</body>
+</html>

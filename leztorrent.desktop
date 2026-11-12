@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=LezTorrent
+GenericName=Торрент-клиент
+Comment=Качай торренты
+Exec=/home/whyres/.local/bin/leztorrent %U
+Icon=leztorrent
+Terminal=false
+Categories=Network;FileTransfer;P2P;
+MimeType=application/x-bittorrent;x-scheme-handler/magnet;
+StartupWMClass=LezTorrent

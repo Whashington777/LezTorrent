@@ -1,8 +1,3 @@
-// Liquid glass: настоящая линза через SVG feDisplacementMap.
-// Для каждого .glass строим карту смещения по форме скруглённого прямоугольника:
-// в центре стекло чистое, у кромки (bezel) фон загибается внутрь, как в толстой линзе.
-// Три канала смещаются с разной силой — лёгкая хроматическая аберрация на кромке.
-
 const NS = 'http://www.w3.org/2000/svg'
 const defs = (() => {
   const svg = document.createElementNS(NS, 'svg')
@@ -16,7 +11,6 @@ const defs = (() => {
 
 const smooth = t => t * t * (3 - 2 * t)
 
-// карта смещения: R = dx, G = dy (128 = ноль)
 function buildMap (w, h, radius, bezel) {
   const c = document.createElement('canvas')
   c.width = w; c.height = h
@@ -27,20 +21,16 @@ function buildMap (w, h, radius, bezel) {
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const px = x + .5 - hw, py = y + .5 - hh
-      // SDF скруглённого прямоугольника
       const qx = Math.abs(px) - (hw - r), qy = Math.abs(py) - (hh - r)
       const ox = Math.max(qx, 0), oy = Math.max(qy, 0)
       const outside = Math.hypot(ox, oy)
-      const sd = outside + Math.min(Math.max(qx, qy), 0) - r // <0 внутри
-      // нормаль наружу
+      const sd = outside + Math.min(Math.max(qx, qy), 0) - r
       let nx, ny
       if (outside > 0) { nx = ox / outside; ny = oy / outside } else if (qx > qy) { nx = 1; ny = 0 } else { nx = 0; ny = 1 }
       nx *= Math.sign(px) || 1; ny *= Math.sign(py) || 1
-      // сила: 1 на кромке → 0 к центру (профиль выпуклой линзы)
       const t = Math.min(Math.max(-sd / bezel, 0), 1)
       const k = 1 - smooth(t)
       const mag = k * k
-      // смещаем выборку внутрь — фон «затягивает» к центру на кромке
       const i = (y * w + x) * 4
       img.data[i] = 128 - nx * mag * 127
       img.data[i + 1] = 128 - ny * mag * 127

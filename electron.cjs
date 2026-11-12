@@ -1,4 +1,3 @@
-// Отдельное окно LezTorrent: поднимает сервер, держит трей, принимает magnet-ссылки
 const { app, BrowserWindow, shell, ipcMain, Tray, Menu, nativeImage } = require('electron')
 const { spawn } = require('node:child_process')
 const path = require('node:path')
@@ -6,7 +5,7 @@ const http = require('node:http')
 const fs = require('node:fs')
 const { fileURLToPath } = require('node:url')
 
-app.commandLine.appendSwitch('ozone-platform-hint', 'auto') // нативный Wayland — нужен для прозрачности в Hyprland
+app.commandLine.appendSwitch('ozone-platform-hint', 'auto')
 app.setName('LezTorrent')
 
 const PORT = process.env.PORT || 8642
@@ -14,7 +13,6 @@ const BASE = `http://127.0.0.1:${PORT}`
 let srv, win, tray
 let quitting = false
 
-// один экземпляр: повторный запуск (или клик по magnet) идёт в уже открытое окно
 if (!app.requestSingleInstanceLock()) { app.quit(); process.exit(0) }
 app.on('second-instance', (_, argv, cwd) => { handleArgs(argv, cwd); show() })
 
@@ -36,7 +34,6 @@ function waitServer (n = 0) {
   })
 }
 
-// аргументы запуска: magnet-ссылки и .torrent-файлы (двойной клик в файловом менеджере)
 function handleArgs (argv, cwd = process.cwd()) {
   for (let a of argv.slice(1)) {
     if (a.startsWith('magnet:')) { request('POST', '/api/add', a).catch(() => {}); continue }
@@ -88,7 +85,6 @@ function show () {
   })
   win.webContents.setWindowOpenHandler(({ url }) => { shell.openExternal(url); return { action: 'deny' } })
   win.on('close', e => {
-    // крестик прячет в трей, если включено и трей реально есть
     if (!quitting && settings.closeToTray && tray) { e.preventDefault(); win.hide() }
   })
   win.on('closed', () => { win = null })

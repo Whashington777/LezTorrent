@@ -1,4 +1,3 @@
-/* LezTorrent — композиция «виджеты + текст песни». Сетка 4/8pt */
 :root {
   --text: rgba(255, 255, 255, .95);
   --muted: rgba(255, 255, 255, .6);
@@ -31,7 +30,7 @@ body {
   display: flex; flex-direction: column;
   background:
     radial-gradient(60% 70% at 72% 18%, rgba(255, 255, 255, .05), transparent 70%),
-    
+
     radial-gradient(120% 100% at 50% 50%, #12141b 0%, #07080b 75%);
 }
 html.native, html.native body { background: transparent; }
@@ -41,7 +40,6 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 :focus-visible { outline: 2px solid rgba(255, 255, 255, .7); outline-offset: 2px; }
 [hidden] { display: none !important; }
 
-/* живой фон — стеклу нужно, что преломлять */
 .aurora { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
 .aurora i { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .45; will-change: transform; }
 .aurora i:nth-child(1) { width: 46vw; height: 46vw; left: -8vw; top: 10vh; background: #6b7180; animation: drift1 26s ease-in-out infinite alternate; }
@@ -54,30 +52,26 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 @media (prefers-reduced-motion: reduce) { .aurora i { animation: none; } }
 #sky { display: none; position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
 
-/* liquid glass: преломление вместо размытия + световой кант */
 .glass {
   position: relative; isolation: isolate;
   background: rgba(255, 255, 255, .02);
-  backdrop-filter: saturate(1.5) brightness(1.08); /* линзу ставит liquid.js */
+  backdrop-filter: saturate(1.5) brightness(1.08);
   box-shadow:
     inset 0 0 0 .5px rgba(255, 255, 255, .1),
     inset 0 1px 0 rgba(255, 255, 255, .08),
     0 12px 32px rgba(0, 0, 0, .38);
 }
-/* кант: яркий в углах, гаснет к середине сторон */
 .glass::after {
   content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
   background: linear-gradient(135deg, rgba(255, 255, 255, .22), rgba(255, 255, 255, 0) 35%, rgba(255, 255, 255, 0) 65%, rgba(255, 255, 255, .08));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor; mask-composite: exclude;
 }
-/* мягкий блик сверху-слева */
 .glass::before {
   content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: -1;
   background: radial-gradient(120% 80% at 10% 0%, rgba(255, 255, 255, .14), transparent 50%);
 }
 
-/* ---------- статус-бар ---------- */
 .status {
   position: relative; z-index: 2; flex: none;
   height: 52px; padding: 0 16px 0 24px;
@@ -118,17 +112,14 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .wctl .x:hover { background: #ff5f57; color: #2a0705; }
 }
 
-/* ---------- сцена ---------- */
 .stage {
   position: relative; z-index: 1; flex: 1; min-height: 0;
   display: grid; grid-template-columns: minmax(300px, 380px) 1fr; gap: 40px;
   padding: 8px 32px 32px 24px;
 }
 
-/* ---------- виджеты ---------- */
 .widgets { display: flex; flex-direction: column; justify-content: center; gap: 12px; min-height: 0; padding-bottom: 8vh; }
 
-/* светлая матовая карточка — как «реклама»/обложка в референсе */
 .hero {
   flex: none; height: 220px;
   display: flex; flex-direction: column; padding: 16px 18px 14px;
@@ -137,7 +128,7 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
   box-shadow: inset 0 1px 0 #fff, inset 0 0 0 1px rgba(255, 255, 255, .6), 0 18px 40px rgba(0, 0, 0, .45);
   position: relative; overflow: hidden;
 }
-.hero::after { /* лёгкий шум-блик */
+.hero::after {
   content: ""; position: absolute; inset: 0; pointer-events: none;
   background: radial-gradient(80% 60% at 100% 0%, rgba(255, 255, 255, .8), transparent 60%);
 }
@@ -158,7 +149,6 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .line > span { display: block; height: 100%; width: 0; background: #0d0e10; border-radius: 2px; transition: width .6s var(--ease-out); }
 .hero-meta { display: flex; justify-content: space-between; align-items: baseline; margin-top: 10px; font-size: 15px; font-weight: 700; color: rgba(13, 14, 16, .75); font-variant-numeric: tabular-nums; }
 
-/* полоска-плеер */
 .player {
   border-radius: 18px; padding: 12px 14px 10px;
   display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; align-items: center;
@@ -180,7 +170,6 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .scrub > span { display: block; height: 100%; width: 0; background: #fff; border-radius: 2px; transition: width .6s var(--ease-out); }
 .p-times { grid-column: 1 / -1; display: flex; justify-content: space-between; margin-top: -4px; font-size: 10.5px; color: var(--dim); font-family: var(--mono); font-variant-numeric: tabular-nums; }
 
-/* виджет скорости */
 .speedw { border-radius: 22px; padding: 16px 18px 12px; display: flex; flex-direction: column; gap: 8px; }
 .sw-row { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
 .sw-big b, .sw-up b { font-weight: 800; letter-spacing: -.035em; font-variant-numeric: tabular-nums; line-height: 1; }
@@ -190,7 +179,6 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .sw-up span { font-size: 13px; }
 #spark { width: 100%; height: 44px; }
 
-/* ---------- «текст песни» ---------- */
 .lyrics { min-width: 0; min-height: 0; display: flex; flex-direction: column; position: relative; }
 .filterbar {
   position: relative; z-index: 2; flex: none;
@@ -216,7 +204,6 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 }
 .ly-list::-webkit-scrollbar { display: none; }
 
-/* --d — плавное расстояние до центра (из JS по прокрутке), 0 = в фокусе */
 .ly {
   --d: 0; --dc: min(var(--d), 3.5);
   padding: 14px 0; cursor: pointer;
@@ -235,14 +222,12 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
   word-break: break-word; color: rgba(255, 255, 255, .5);
   transition: color .35s ease;
 }
-/* фокус: прогресс заливает буквы как караоке */
 .ly.on .ly-name {
   background: linear-gradient(90deg, #fff var(--p, 0%), rgba(255, 255, 255, .38) var(--p, 0%));
   -webkit-background-clip: text; background-clip: text; color: transparent;
-  
+
 }
 
-/* мета раскрывается только у строки в фокусе */
 .ly-meta {
   display: grid; grid-template-rows: 0fr; opacity: 0;
   transition: grid-template-rows .4s var(--ease-out), opacity .3s ease, margin .4s var(--ease-out);
@@ -270,19 +255,17 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .ly-empty .big { margin: 0; font-size: clamp(36px, 5vw, 64px); line-height: 1.02; font-weight: 800; letter-spacing: -.035em; color: rgba(255, 255, 255, .9); }
 .ly-empty .hint { margin: 16px 0 0; color: var(--muted); font-size: 14px; filter: blur(.3px); }
 
-/* ---------- плашки ---------- */
 .handle {
   position: fixed; right: 24px; bottom: 20px; z-index: 3;
   height: 36px; padding: 0 14px 0 10px; display: flex; align-items: center; gap: 8px;
   border: 0; border-radius: 999px; font-size: 13px; font-weight: 600;
-  
+
   transition: background-color .15s ease, transform .16s var(--ease-out);
 }
 .handle svg { width: 16px; height: 16px; padding: 2px; border-radius: 50%; background: #fff; color: #0d0e10; }
 .handle:active { transform: scale(.96); }
 @media (hover: hover) { .handle:hover { background: rgba(255, 255, 255, .16); } }
 
-/* уведомления справа сверху — как баннеры iOS */
 .notes { position: fixed; top: 56px; right: 24px; z-index: 5; display: flex; flex-direction: column; gap: 8px; width: min(340px, 80vw); }
 .note {
   display: grid; grid-template-columns: 30px 1fr auto; gap: 2px 10px; align-items: center;
@@ -308,7 +291,6 @@ button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 }
 .drop.on { opacity: 1; }
 
-/* ---------- диалоги ---------- */
 dialog {
   color: var(--text); border: 0; padding: 22px; width: min(460px, 92vw); border-radius: 24px;
   background: rgba(24, 26, 32, .55); backdrop-filter: blur(22px) saturate(170%);
@@ -351,7 +333,6 @@ dialog footer label { margin: 0; }
 .files .line { flex: 1; background: rgba(255, 255, 255, .14); }
 .files .line > span { background: #fff; }
 
-/* ---------- настройки ---------- */
 dialog.settings { width: min(560px, 94vw); max-height: 88vh; padding: 26px 26px 22px; }
 dialog.settings form { display: flex; flex-direction: column; max-height: calc(88vh - 26px); }
 dialog.settings h3 { font-size: 28px; margin-bottom: 8px; }
@@ -369,7 +350,6 @@ dialog label.field input[type=number] { width: 112px; text-align: right; font-si
 dialog label.field input::placeholder { color: var(--dim); }
 input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
 
-/* переключатель в духе iOS, монохром */
 input.sw {
   appearance: none; -webkit-appearance: none; flex: none; margin: 0; cursor: pointer;
   width: 46px !important; height: 28px !important; border-radius: 999px; position: relative;
@@ -386,7 +366,6 @@ input.sw:checked::after { transform: translateX(18px); background: #0d0e10; }
 input.sw:active::after { width: 26px; }
 input.sw:checked:active::after { transform: translateX(14px); }
 
-/* выбор файлов */
 dialog.filesdlg { width: min(560px, 94vw); }
 .files li { padding: 8px 2px 10px; }
 .frow { display: flex !important; flex-direction: row !important; align-items: center; gap: 12px !important; margin: 0 !important; cursor: pointer; color: var(--text) !important; }
@@ -404,7 +383,6 @@ input.ck:checked { background: #fff; box-shadow: none; }
 input.ck:checked::after { content: ""; width: 10px; height: 6px; border: 2.2px solid #0d0e10; border-top: 0; border-right: 0; transform: translateY(-1px) rotate(-45deg); }
 .fempty { color: var(--muted); font-size: 14px; padding: 16px 0; }
 
-/* кнопки и пилюли — без канта и бликов, только мягкая подложка */
 .pill.glass, .ly-act.glass, .allbtn.glass, .handle.glass, .tabs.glass, .note.glass {
   box-shadow: none; background: rgba(255, 255, 255, .08);
 }
@@ -412,7 +390,6 @@ input.ck:checked::after { content: ""; width: 10px; height: 6px; border: 2.2px s
 .pill.glass::before, .ly-act.glass::before, .allbtn.glass::before, .handle.glass::before, .tabs.glass::before, .note.glass::before { display: none; }
 .note.glass { background: rgba(40, 42, 50, .6); box-shadow: 0 12px 32px rgba(0, 0, 0, .35); }
 
-/* ---------- игровое ---------- */
 .allbtn {
   height: 36px; padding: 0 16px; border: 0; border-radius: 999px; cursor: pointer;
   font-size: 13px; font-weight: 600; color: var(--text); background: rgba(255, 255, 255, .03);
@@ -428,7 +405,6 @@ input.ck:checked::after { content: ""; width: 10px; height: 6px; border: 2.2px s
 .picked b { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .picked span { color: var(--muted); flex: none; font-variant-numeric: tabular-nums; }
 
-/* сегмент-контрол «Когда всё скачается» */
 .seg-field { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 46px; font-size: 15px; font-weight: 500; }
 .seg { display: flex; padding: 3px; border-radius: 999px; background: rgba(255, 255, 255, .08); box-shadow: inset 0 0 0 1px var(--hair); }
 dialog .seg label { margin: 0; flex-direction: row; cursor: pointer; }
@@ -437,7 +413,6 @@ dialog .seg label { margin: 0; flex-direction: row; cursor: pointer; }
 .seg input:checked + span { background: #fff; color: #0d0e10; }
 .seg input:focus-visible + span { outline: 2px solid rgba(255, 255, 255, .7); }
 
-/* ---------- адаптив ---------- */
 @media (max-width: 980px) {
   .stage { grid-template-columns: 300px 1fr; gap: 24px; padding: 8px 16px 24px; }
   .clock span { display: none; }

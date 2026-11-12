@@ -2,11 +2,10 @@ const $ = s => document.querySelector(s)
 const list = $('#list')
 let data = { torrents: [], stats: {}, settings: {} }
 let filter = 'all'
-let focus = null // hash торрента в фокусе
+let focus = null
 const hist = Array(48).fill(0)
-const known = new Map() // hash -> status, для уведомлений «готово»
+const known = new Map()
 
-// ---------- форматирование ----------
 const units = ['B', 'KB', 'MB', 'GB', 'TB']
 function split (n) {
   if (!n) return ['0', 'KB']
@@ -36,7 +35,6 @@ const ICON = {
   play: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M8 5.5v13l10.5-6.5z"/></svg>',
 }
 
-// ---------- API ----------
 async function api (url, opts = {}) {
   const r = await fetch(url, { method: 'POST', ...opts })
   const j = await r.json().catch(() => ({}))
@@ -52,7 +50,6 @@ function note (title, text, err = false) {
   setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300) }, 4000)
 }
 
-// ---------- рендер ----------
 function matches (t, f = filter) {
   if (f === 'all') return true
   if (f === 'paused') return t.paused
@@ -64,7 +61,6 @@ function render () {
   const shown = data.torrents.filter(t => matches(t))
   if (!shown.find(t => t.hash === focus)) focus = (shown.find(t => t.status === 'downloading') || shown[0])?.hash ?? null
 
-  // список «текст песни»
   const keep = new Set(shown.map(t => t.hash))
   for (const li of [...list.children]) if (!keep.has(li.dataset.hash)) li.remove()
   const fi = shown.findIndex(t => t.hash === focus)
@@ -101,7 +97,6 @@ function render () {
 
 function renderWidgets (t) {
   const s = t ? stateOf(t) : null
-  // карточка
   $('#hero-chip').textContent = t ? chipText[s] : 'Пусто'
   $('#hero-name').textContent = t ? t.name : 'Пока тихо'
   $('#hero-bar').style.width = t ? t.progress * 100 + '%' : '0'
@@ -111,7 +106,6 @@ function renderWidgets (t) {
     : statusText[s]
   $('#hero-pct').textContent = t ? pct(t.progress) : ''
 
-  // плеер
   $('#p-name').textContent = t ? t.name : '—'
   $('#p-sub').textContent = t ? (t.error || statusText[s] + (t.downSpeed ? ' · ' + speed(t.downSpeed) : '')) : ''
   $('#p-bar').style.width = t ? t.progress * 100 + '%' : '0'
@@ -121,7 +115,6 @@ function renderWidgets (t) {
   tg.title = t?.paused ? 'Продолжить' : 'Пауза'
   document.querySelectorAll('.pbtn').forEach(b => { b.disabled = !t })
 
-  // скорость
   const [v, u] = split(data.stats.downSpeed)
   $('#g-down').textContent = v; $('#g-down-u').textContent = '↓ ' + u + '/s'
   const [v2, u2] = split(data.stats.upSpeed)
@@ -150,7 +143,6 @@ function renderIsland () {
   const isl = $('#island')
   isl.classList.toggle('live', live)
   $('#island-text').textContent = data.afterPending ? 'Выключаюсь через минуту' : live ? '↓ ' + speed(down) : 'Добавить'
-  // хоть что-то на паузе → предлагаем продолжить; иначе — поставить всё на паузу
   const anyPaused = data.torrents.some(t => t.paused)
   const ab = $('#all-toggle')
   ab.textContent = anyPaused ? 'Продолжить всё' : 'Пауза всё'
@@ -179,7 +171,6 @@ function scrollToFocus (smooth = true) {
   list.scrollTo({ top, behavior: smooth ? 'smooth' : 'auto' })
 }
 
-// ---------- события ----------
 let first = true
 function connect () {
   const es = new EventSource('/api/events')
@@ -210,7 +201,6 @@ list.addEventListener('click', e => {
   setFocus(li.dataset.hash)
 })
 
-// плавная глубина: --d считается от центра фокус-зоны на каждом кадре прокрутки
 function depth () {
   const box = list.getBoundingClientRect(), anchor = box.top + box.height * 0.32
   for (const li of list.children) {
@@ -223,7 +213,6 @@ let depthRaf = 0
 list.addEventListener('scroll', () => { cancelAnimationFrame(depthRaf); depthRaf = requestAnimationFrame(depth) }, { passive: true })
 addEventListener('resize', depth)
 
-// колесо — переключает строку, как прокрутка текста песни
 let wheelLock = 0
 list.addEventListener('wheel', e => {
   e.preventDefault()
@@ -320,9 +309,8 @@ function askRemove (t) {
   dlg.showModal()
 }
 
-// ---------- добавление ----------
 const gbs = n => size(n)
-let picked = [] // выбранные .torrent с размерами
+let picked = []
 
 async function addMagnet (text, dir) {
   try {
@@ -343,7 +331,6 @@ async function addFiles (files, dir) {
   }
 }
 
-// свободное место под выбранную папку; need — сколько займёт (если известно)
 let spaceReq = 0
 async function showSpace (el, dir, need = 0) {
   const my = ++spaceReq
@@ -417,7 +404,6 @@ addEventListener('drop', e => {
   if (text.startsWith('magnet:')) addMagnet(text)
 })
 
-// ---------- настройки ----------
 const NUM = ['downloadLimit', 'uploadLimit', 'seedRatio', 'seedHours', 'maxActive', 'torrentPort']
 const BOOL = ['startPaused', 'notify', 'autostart', 'closeToTray']
 $('#open-settings').onclick = () => {
@@ -442,7 +428,6 @@ $('#settings').addEventListener('close', async () => {
   } catch (err) { note('Не сохранено', err.message, true) }
 })
 
-// ---------- часы ----------
 function tick () {
   const d = new Date()
   $('#time').textContent = d.toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })
@@ -450,10 +435,8 @@ function tick () {
 }
 tick(); setInterval(tick, 10000)
 
-// эквалайзер острова живёт между апдейтами
 setInterval(renderIsland, 120)
 
-// ---------- нативное окно (Electron) ----------
 if (window.native) {
   document.documentElement.classList.add('native')
   $('#wctl').hidden = false

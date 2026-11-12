@@ -1,4 +1,3 @@
-// LezTorrent — локальный торрент-клиент: WebTorrent + HTTP API + SSE
 import http from 'node:http'
 import fs from 'node:fs'
 import fsp from 'node:fs/promises'
@@ -18,22 +17,20 @@ const HOST = '127.0.0.1'
 
 fs.mkdirSync(CONFIG_DIR, { recursive: true })
 
-// ---------- состояние ----------
 const defaults = {
   downloadDir: path.join(os.homedir(), 'Downloads', 'Torrents'),
-  downloadLimit: 0, // KB/s, 0 = без лимита
+  downloadLimit: 0,
   uploadLimit: 0,
-  seedRatio: 0, // остановить раздачу при рейтинге, 0 = никогда
-  seedHours: 0, // остановить раздачу через N часов, 0 = никогда
-  maxActive: 3, // одновременно качающихся, 0 = без ограничения
-  torrentPort: 6881, // порт входящих подключений
+  seedRatio: 0,
+  seedHours: 0,
+  maxActive: 3,
+  torrentPort: 6881,
   startPaused: false,
   notify: true,
   autostart: false,
   closeToTray: true,
-  afterAll: 'none', // что сделать, когда всё докачается: none | suspend | poweroff (одноразово)
+  afterAll: 'none',
 }
-// torrents: infoHash -> { source, paused, queued, addedAt, name, dir, length, doneAt, deselected: [] }
 let state = { settings: { ...defaults }, torrents: {} }
 try { state = { ...state, ...JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')) } } catch {}
 state.settings = { ...defaults, ...state.settings }
@@ -78,9 +75,7 @@ X-GNOME-Autostart-enabled=true
   }
 }
 
-// ---------- диск ----------
 function diskFree (dir) {
-  // ищем ближайшую существующую папку вверх по пути
   let d = path.resolve(dir)
   while (!fs.existsSync(d) && path.dirname(d) !== d) d = path.dirname(d)
   try {
@@ -89,7 +84,6 @@ function diskFree (dir) {
   } catch { return { free: 0, total: 0, at: d } }
 }
 
-// уже лежащие на диске байты торрента не надо считать заново
 function bytesOnDisk (dir, name) {
   if (!name) return 0
   let sum = 0
@@ -119,7 +113,6 @@ function checkSpace (t, meta) {
 }
 const gb = n => (n / 1024 ** 3).toFixed(n < 10 * 1024 ** 3 ? 1 : 0) + ' ГБ'
 
-// ---------- действие после загрузки всего ----------
 let afterTimer = null, wasDownloading = false
 function afterAllCheck () {
   const downloading = Object.values(state.torrents).some(m => !m.paused && !m.doneAt)
@@ -128,8 +121,8 @@ function afterAllCheck () {
     notify('Всё скачано', act === 'poweroff' ? 'Выключаю компьютер через минуту' : 'Усыпляю компьютер через минуту')
     afterTimer = setTimeout(() => {
       afterTimer = null
-      if (state.settings.afterAll !== act) return // передумали
-      state.settings.afterAll = 'none' // одноразово
+      if (state.settings.afterAll !== act) return
+      state.settings.afterAll = 'none'
       fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2))
       spawn('systemctl', [act], { detached: true, stdio: 'ignore' }).on('error', () => {}).unref()
     }, 60e3)
@@ -138,7 +131,6 @@ function afterAllCheck () {
   wasDownloading = downloading
 }
 
-// ---------- работа с торрентами ----------
 const running = hash => client.torrents.find(t => t.infoHash === hash)
 
 function applySelection (t, meta) {
@@ -149,7 +141,6 @@ function applySelection (t, meta) {
   t.files.forEach((f, i) => (off.has(i) ? f.deselect() : f.select()))
 }
 
-// прогресс и готовность только по выбранным файлам
 function selStats (t, meta) {
   if (!t.ready) return { done: false, progress: t.progress || 0, length: t.length || 0 }
   const off = new Set(meta.deselected || [])
@@ -187,18 +178,15 @@ function stopTorrent (hash) {
   return t ? new Promise(r => t.destroy({ destroyStore: false }, r)) : Promise.resolve()
 }
 
-// Планировщик: лимиты раздачи + очередь загрузок
 function schedule () {
   const s = state.settings
   const now = Date.now()
 
-  // 0. готовность частично выбранных торрентов (WebTorrent сам её не видит)
   for (const [hash, meta] of Object.entries(state.torrents)) {
     const t = running(hash)
     if (t && !meta.doneAt && selStats(t, meta).done) markDone(t, meta)
   }
 
-  // 1. остановка раздачи по рейтингу / времени
   for (const [hash, meta] of Object.entries(state.torrents)) {
     const t = running(hash)
     if (!t || !t.ready || meta.paused || !meta.doneAt) continue
@@ -214,7 +202,6 @@ function schedule () {
     }
   }
 
-  // 2. очередь: недокачанные, не на паузе, по времени добавления
   const pending = Object.entries(state.torrents)
     .filter(([, m]) => !m.paused && !m.doneAt)
     .sort((a, b) => a[1].addedAt - b[1].addedAt)
@@ -226,7 +213,6 @@ function schedule () {
     else if (running(hash)) stopTorrent(hash)
   })
 
-  // 3. докачанные и не на паузе — раздаются
   for (const [hash, meta] of Object.entries(state.torrents)) if (!meta.paused && meta.doneAt) startTorrent(hash)
   save()
 }
@@ -313,7 +299,6 @@ function snapshot () {
   }
 }
 
-// ---------- HTTP ----------
 const MIME = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon' }
 
 function json (res, code, data) {
@@ -343,7 +328,6 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`)
   const p = url.pathname
   try {
-    // простая защита от CSRF с чужих сайтов
     if (req.method !== 'GET' && req.headers.origin && !/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(req.headers.origin)) {
       return json(res, 403, { error: 'forbidden' })
     }
@@ -366,7 +350,6 @@ const server = http.createServer(async (req, res) => {
 
     if (p === '/api/disk') return json(res, 200, diskFree((url.searchParams.get('dir') || state.settings.downloadDir).replace(/^~/, os.homedir())))
 
-    // размер .torrent до добавления — чтобы сразу сказать, влезет ли
     if (p === '/api/inspect' && req.method === 'POST') {
       const { default: parseTorrent } = await import('parse-torrent')
       const parsed = await parseTorrent(await readBody(req))
@@ -411,7 +394,6 @@ const server = http.createServer(async (req, res) => {
       const sel = new Set((b.selected || []).map(Number))
       if (total && !sel.size) throw new Error('Выбери хотя бы один файл')
       meta.deselected = Array.from({ length: total }, (_, i) => i).filter(i => !sel.has(i))
-      // выбрали ранее отключённые — значит снова есть что качать
       if (meta.doneAt && meta.deselected.length < total) { meta.doneAt = null; meta.seedStopped = false }
       const t = running(fm[1])
       if (t) applySelection(t, meta)
@@ -427,7 +409,6 @@ const server = http.createServer(async (req, res) => {
       if (action === 'pause') { meta.paused = true; await stopTorrent(hash) }
       if (action === 'resume') { meta.paused = false; meta.error = null; meta.seedStopped = false; meta.spaceOk = false; schedule() }
       if (action === 'recheck') {
-        // WebTorrent сверяет все куски с хешами при добавлении — перезапуск = полная проверка
         await stopTorrent(hash)
         meta.rechecking = !!meta.doneAt
         meta.doneAt = null; meta.progress = 0; meta.error = null; meta.paused = false
@@ -449,7 +430,6 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { ok: true })
     }
 
-    // статика
     const file = path.normalize(path.join(PUBLIC, p === '/' ? 'index.html' : p))
     if (!file.startsWith(PUBLIC)) return json(res, 403, { error: 'forbidden' })
     const data = await fsp.readFile(file).catch(() => null)
